@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SignalJobs - AI Job Vacancy Tracker</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f8fb;
+        --panel: #ffffff;
+        --panel-2: #f1f4f8;
+        --text: #151922;
+        --muted: #667085;
+        --line: #dde3eb;
+        --accent: #147d73;
+        --accent-2: #2563eb;
+        --good: #1b8a5a;
+        --warn: #b45309;
+        --bad: #c24141;
+        --shadow: 0 16px 40px rgba(21, 25, 34, 0.08);
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0f1218;
+        --panel: #171b23;
+        --panel-2: #202631;
+        --text: #eef2f7;
+        --muted: #9aa4b2;
+        --line: #303746;
+        --accent: #2dd4bf;
+        --accent-2: #7aa2ff;
+        --good: #45c486;
+        --warn: #f0b25a;
+        --bad: #ff7a7a;
+        --shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        letter-spacing: 0;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 248px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        border-right: 1px solid var(--line);
+        background: var(--panel);
+        padding: 22px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 8px;
+        font-weight: 760;
+        font-size: 18px;
+      }
+
+      .mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: var(--text);
+        color: var(--panel);
+        display: grid;
+        place-items: center;
+      }
+
+      .nav {
+        display: grid;
+        gap: 4px;
+      }
+
+      .nav button,
+      .ghost-button,
+      .icon-button {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+      }
+
+      .nav button {
+        width: 100%;
+        min-height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 10px;
+        text-align: left;
+        font-size: 14px;
+        font-weight: 650;
+      }
+
+      .nav button.active,
+      .nav button:hover {
+        background: var(--panel-2);
+        color: var(--text);
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: var(--panel-2);
+      }
+
+      .mini-label {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .mini-value {
+        margin-top: 4px;
+        font-weight: 750;
+      }
+
+      main {
+        min-width: 0;
+        padding: 22px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 22px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 46px);
+        line-height: 1.05;
+        max-width: 780px;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        margin: 10px 0 0;
+        color: var(--muted);
+        max-width: 680px;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .primary,
+      .secondary,
+      .danger {
+        min-height: 40px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 760;
+      }
+
+      .primary {
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      .secondary {
+        background: var(--panel);
+        color: var(--text);
+        border-color: var(--line);
+      }
+
+      .danger {
+        background: transparent;
+        color: var(--bad);
+        border-color: color-mix(in srgb, var(--bad) 28%, transparent);
+      }
+
+      .icon {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 16px;
+      }
+
+      .metric,
+      .panel,
+      .job-card,
+      .tracker-card,
+      .modal {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .metric {
+        padding: 16px;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 10px;
+        font-size: 28px;
+        letter-spacing: 0;
+      }
+
+      .content {
+        grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.85fr);
+        align-items: start;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      h2,
+      h3 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+
+      h3 {
+        font-size: 15px;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+      }
+
+      label {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 750;
+      }
+
+      input,
+      select {
+        width: 100%;
+        min-height: 40px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--text);
+        padding: 0 12px;
+        outline: none;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+      }
+
+      .tracker-list,
+      .job-list,
+      .activity-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .tracker-card,
+      .job-card {
+        padding: 14px;
+      }
+
+      .card-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 24px;
+        border-radius: 999px;
+        padding: 0 9px;
+        font-size: 12px;
+        font-weight: 760;
+        background: color-mix(in srgb, var(--good) 14%, transparent);
+        color: var(--good);
+        white-space: nowrap;
+      }
+
+      .status.paused {
+        background: color-mix(in srgb, var(--warn) 14%, transparent);
+        color: var(--warn);
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 12px;
+      }
+
+      .tag {
+        border: 1px solid var(--line);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 5px 8px;
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .ghost-button {
+        min-height: 32px;
+        border-radius: 8px;
+        padding: 0 9px;
+        font-size: 13px;
+        font-weight: 730;
+      }
+
+      .ghost-button:hover {
+        background: var(--panel-2);
+        color: var(--text);
+      }
+
+      .match {
+        min-width: 58px;
+        text-align: center;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--accent-2) 13%, transparent);
+        color: var(--accent-2);
+        padding: 8px;
+        font-weight: 820;
+      }
+
+      .activity-item {
+        border-left: 2px solid var(--line);
+        padding: 2px 0 12px 12px;
+      }
+
+      .activity-item:last-child {
+        padding-bottom: 0;
+      }
+
+      .chart {
+        height: 140px;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        align-items: end;
+        padding-top: 12px;
+      }
+
+      .bar {
+        min-height: 20px;
+        border-radius: 6px 6px 2px 2px;
+        background: linear-gradient(180deg, var(--accent), var(--accent-2));
+        position: relative;
+      }
+
+      .bar span {
+        position: absolute;
+        bottom: -22px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(4, 8, 16, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        z-index: 20;
+      }
+
+      .modal-backdrop.open {
+        display: flex;
+      }
+
+      .modal {
+        width: min(640px, 100%);
+        padding: 18px;
+      }
+
+      .modal-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .modal-grid .wide {
+        grid-column: 1 / -1;
+      }
+
+      .empty {
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        max-width: 340px;
+        background: var(--text);
+        color: var(--panel);
+        border-radius: 8px;
+        padding: 12px 14px;
+        box-shadow: var(--shadow);
+        transform: translateY(120%);
+        transition: transform 180ms ease;
+        z-index: 30;
+      }
+
+      .toast.show {
+        transform: translateY(0);
+      }
+
+      @media (max-width: 980px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+          height: auto;
+          flex-direction: row;
+          align-items: center;
+          overflow-x: auto;
+        }
+
+        .nav {
+          display: flex;
+          min-width: max-content;
+        }
+
+        .sidebar-footer {
+          display: none;
+        }
+
+        .content,
+        .metrics {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 680px) {
+        main {
+          padding: 16px;
+        }
+
+        .topbar,
+        .card-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .actions {
+          justify-content: stretch;
+        }
+
+        .actions > *,
+        .toolbar {
+          width: 100%;
+        }
+
+        .metrics,
+        .content,
+        .toolbar,
+        .modal-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .modal-grid .wide {
+          grid-column: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" aria-label="Main navigation">
+        <div class="brand">
+          <div class="mark" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12.5 10 17l9-10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          SignalJobs
+        </div>
+        <nav class="nav" aria-label="Sections">
+          <button class="active" data-section="dashboard">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 13h7V4H4v9Zm9 7h7V4h-7v16ZM4 20h7v-5H4v5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
+            Dashboard
+          </button>
+          <button data-section="trackers">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M11 4H5v6h6V4Zm8 0h-6v6h6V4ZM11 14H5v6h6v-6Zm8 0h-6v6h6v-6Z" stroke="currentColor" stroke-width="1.8" /></svg>
+            Trackers
+          </button>
+          <button data-section="notifications">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7ZM13.7 19a2 2 0 0 1-3.4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            Notifications
+          </button>
+          <button data-section="insights">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 19V5m0 14h16M8 16v-5m4 5V8m4 8v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+            AI Insights
+          </button>
+          <button data-section="settings">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" stroke="currentColor" stroke-width="1.8" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2.1 2.1 0 0 1-2.97 2.97l-.06-.06A1.7 1.7 0 0 0 14.9 19.5a1.7 1.7 0 0 0-1 1.55V21a2.1 2.1 0 0 1-4.2 0v-.09a1.7 1.7 0 0 0-1.1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06A2.1 2.1 0 0 1 3.7 16.8l.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-1.55-1H2.5a2.1 2.1 0 0 1 0-4.2h.09a1.7 1.7 0 0 0 1.55-1.1 1.7 1.7 0 0 0-.34-1.87l-.06-.06A2.1 2.1 0 0 1 6.7 3.8l.06.06A1.7 1.7 0 0 0 8.6 4.2a1.7 1.7 0 0 0 1.1-1.55V2.6a2.1 2.1 0 0 1 4.2 0v.09a1.7 1.7 0 0 0 1.1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06A2.1 2.1 0 0 1 19.9 6.8l-.06.06A1.7 1.7 0 0 0 19.5 8.7a1.7 1.7 0 0 0 1.55 1.1h.09a2.1 2.1 0 0 1 0 4.2h-.09A1.7 1.7 0 0 0 19.4 15Z" stroke="currentColor" stroke-width="1.2" /></svg>
+            Settings
+          </button>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="mini-label">Next scan</div>
+          <div class="mini-value" id="nextScan">03h 58m</div>
+        </div>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <div>
+            <h1>Track vacancies across job sites without refreshing them manually.</h1>
+            <p class="lead">Create lightweight trackers for NHS portals, university jobs, company career pages, LinkedIn, Indeed, or custom URLs. SignalJobs dedupes listings and surfaces the strongest matches first.</p>
+          </div>
+          <div class="actions">
+            <button class="secondary" id="themeToggle" type="button" aria-label="Toggle dark mode">
+              <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.7 6.7 0 0 0 9.8 9.8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
+              Theme
+            </button>
+            <button class="secondary" id="scanNow" type="button">
+              <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              Run scan
+            </button>
+            <button class="primary" id="openModal" type="button">
+              <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+              New tracker
+            </button>
+          </div>
+        </header>
+
+        <section class="grid metrics" aria-label="Platform overview">
+          <article class="metric">
+            <span class="mini-label">Active trackers</span>
+            <strong id="activeCount">0</strong>
+          </article>
+          <article class="metric">
+            <span class="mini-label">Matched jobs</span>
+            <strong id="matchCount">0</strong>
+          </article>
+          <article class="metric">
+            <span class="mini-label">Unread alerts</span>
+            <strong id="unreadCount">0</strong>
+          </article>
+          <article class="metric">
+            <span class="mini-label">Duplicate blocks</span>
+            <strong id="dupeCount">0</strong>
+          </article>
+        </section>
+
+        <section class="grid content">
+          <div class="grid">
+            <section class="panel" aria-labelledby="trackersTitle">
+              <div class="panel-header">
+                <div>
+                  <h2 id="trackersTitle">Trackers</h2>
+                  <div class="muted">Automation rules and scan status</div>
+                </div>
+                <button class="secondary" type="button" id="clearPaused">Clear paused</button>
+              </div>
+              <div class="toolbar">
+                <input id="searchInput" type="search" placeholder="Filter trackers or jobs" aria-label="Filter trackers or jobs" />
+                <select id="frequencyFilter" aria-label="Filter by frequency">
+                  <option value="all">Any frequency</option>
+                  <option value="1h">Every hour</option>
+                  <option value="4h">Every 4 hours</option>
+                  <option value="12h">Every 12 hours</option>
+                </select>
+                <select id="statusFilter" aria-label="Filter by status">
+                  <option value="all">All statuses</option>
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                </select>
+              </div>
+              <div class="tracker-list" id="trackerList"></div>
+            </section>
+
+            <section class="panel" aria-labelledby="jobsTitle">
+              <div class="panel-header">
+                <div>
+                  <h2 id="jobsTitle">Latest matched jobs</h2>
+                  <div class="muted">Sorted by AI relevance and freshness</div>
+                </div>
+                <button class="secondary" type="button" id="markRead">Mark read</button>
+              </div>
+              <div class="job-list" id="jobList"></div>
+            </section>
+          </div>
+
+          <aside class="grid">
+            <section class="panel" aria-labelledby="insightsTitle">
+              <div class="panel-header">
+                <div>
+                  <h2 id="insightsTitle">AI insights</h2>
+                  <div class="muted">Semantic matching summary</div>
+                </div>
+              </div>
+              <p class="lead" style="font-size: 14px; margin-top: 0">Healthcare assistant and junior backend roles are trending up in London. Sponsorship mentions are uncommon, so matching weights location and entry-level terms higher.</p>
+              <div class="chart" aria-label="Weekly matches chart">
+                <div class="bar" style="height: 36%"><span>Mon</span></div>
+                <div class="bar" style="height: 52%"><span>Tue</span></div>
+                <div class="bar" style="height: 45%"><span>Wed</span></div>
+                <div class="bar" style="height: 68%"><span>Thu</span></div>
+                <div class="bar" style="height: 82%"><span>Fri</span></div>
+                <div class="bar" style="height: 44%"><span>Sat</span></div>
+                <div class="bar" style="height: 61%"><span>Sun</span></div>
+              </div>
+            </section>
+
+            <section class="panel" aria-labelledby="activityTitle">
+              <div class="panel-header">
+                <div>
+                  <h2 id="activityTitle">Activity</h2>
+                  <div class="muted">Recent scan events</div>
+                </div>
+              </div>
+              <div class="activity-list" id="activityList"></div>
+            </section>
+
+            <section class="panel" aria-labelledby="channelsTitle">
+              <div class="panel-header">
+                <div>
+                  <h2 id="channelsTitle">Notification channels</h2>
+                  <div class="muted">Ready for SaaS integrations</div>
+                </div>
+              </div>
+              <div class="tags">
+                <span class="tag">Email via Resend</span>
+                <span class="tag">Telegram bot</span>
+                <span class="tag">Firebase push</span>
+                <span class="tag">Webhook later</span>
+              </div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <form class="modal" id="trackerForm">
+        <div class="panel-header">
+          <div>
+            <h2 id="modalTitle">Create tracker</h2>
+            <div class="muted">Add a vacancy source and matching rules</div>
+          </div>
+          <button class="secondary" type="button" id="closeModal">Close</button>
+        </div>
+        <div class="modal-grid">
+          <div class="field wide">
+            <label for="website">Website URL</label>
+            <input id="website" name="website" type="url" placeholder="https://jobs.nhs.uk" required />
+          </div>
+          <div class="field">
+            <label for="keywords">Keywords</label>
+            <input id="keywords" name="keywords" placeholder="Healthcare Assistant, support worker" required />
+          </div>
+          <div class="field">
+            <label for="location">Location</label>
+            <input id="location" name="location" placeholder="London" required />
+          </div>
+          <div class="field">
+            <label for="salary">Minimum salary</label>
+            <input id="salary" name="salary" type="number" min="0" placeholder="29000" />
+          </div>
+          <div class="field">
+            <label for="jobType">Job type</label>
+            <select id="jobType" name="jobType">
+              <option>Any</option>
+              <option>Full-time</option>
+              <option>Part-time</option>
+              <option>Contract</option>
+              <option>Graduate</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="frequency">Frequency</label>
+            <select id="frequency" name="frequency">
+              <option value="1h">Every hour</option>
+              <option value="4h" selected>Every 4 hours</option>
+              <option value="12h">Every 12 hours</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="channels">Notification methods</label>
+            <select id="channels" name="channels">
+              <option>Email + Telegram</option>
+              <option>Email only</option>
+              <option>Telegram only</option>
+              <option>Email + Push</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-actions" style="justify-content: flex-end; margin-top: 18px">
+          <button class="secondary" type="reset">Reset</button>
+          <button class="primary" type="submit">Save tracker</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const seed = {
+        version: "royal-free-2026-05-26",
+        trackers: [
+          {
+            id: crypto.randomUUID(),
+            site: "https://www.royalfree.nhs.uk/working-here/our-current-vacancies#!/job_list/s1/Nursing_Midwifery?_ts=1",
+            title: "Royal Free nursing bank Band 3",
+            keywords: ["Healthcare Assistant", "Band 3", "Bank"],
+            location: "London",
+            salary: "30630",
+            jobType: "Bank",
+            frequency: "1h",
+            channels: "Email + Telegram",
+            active: true,
+            lastChecked: "Just checked",
+          },
+          {
+            id: crypto.randomUUID(),
+            site: "https://www.royalfree.nhs.uk/working-here/our-current-vacancies#!/job_list/s7/Administrative_Services?_ts=1",
+            title: "Royal Free admin bank Band 3",
+            keywords: ["Administration", "Clerical", "Assistant", "Band 3", "Bank"],
+            location: "London",
+            salary: "30630",
+            jobType: "Bank",
+            frequency: "1h",
+            channels: "Email + Telegram",
+            active: true,
+            lastChecked: "Just checked",
+          },
+        ],
+        jobs: [
+          {
+            id: crypto.randomUUID(),
+            tracker: "Royal Free admin bank Band 3",
+            title: "Band 3 - Clerical Officer Diagnostic Imaging",
+            company: "Royal Free London NHS Foundation Trust",
+            salary: "£30,630 - £32,346",
+            location: "Finchley Memorial Hospital / Wood Green",
+            link: "https://www.royalfree.nhs.uk/working-here/our-current-vacancies#!/job/UK/London/North_Finchley/Royal_Free_London_NHS_Foundation_Trust/Community_Diagnostic_Centre/Community_Diagnostic_Centre-v8012775",
+            match: 88,
+            unread: true,
+            summary: "Current Royal Free Band 3 administrative match. It is not labelled bank, but includes weekend and evening working.",
+          },
+          {
+            id: crypto.randomUUID(),
+            tracker: "Royal Free admin bank Band 3",
+            title: "Macular Failsafe Assistant",
+            company: "Royal Free London NHS Foundation Trust",
+            salary: "£30,630 - £32,346",
+            location: "North Middlesex University Hospital",
+            link: "https://www.royalfree.nhs.uk/working-here/our-current-vacancies#!/job/UK/London/Edmonton/Royal_Free_London_NHS_Foundation_Trust/Ophthalmology/Ophthalmology-v7777568",
+            match: 82,
+            unread: true,
+            summary: "Current Royal Free Band 3 assistant/admin-adjacent match. It is full-time and not labelled bank.",
+          },
+          {
+            id: crypto.randomUUID(),
+            tracker: "Royal Free nursing bank Band 3",
+            title: "No current Band 3 bank healthcare listing found",
+            company: "Royal Free London NHS Foundation Trust",
+            salary: "N/A",
+            location: "Nursing and Midwifery",
+            link: "https://www.royalfree.nhs.uk/working-here/our-current-vacancies#!/job_list/s1/Nursing_Midwifery?_ts=1",
+            match: 0,
+            unread: true,
+            summary: "Latest check found Nursing/Midwifery listings, but visible jobs were Band 5, 6, 7, 8a, and 8b. No Band 3 bank healthcare job was listed.",
+          },
+        ],
+        duplicateBlocks: 0,
+        activity: [
+          "Royal Free Nursing/Midwifery checked: no Band 3 bank healthcare job found.",
+          "Royal Free Administrative Services checked: two Band 3 admin-adjacent roles found, neither labelled bank.",
+          "Monitoring targets set for Band 3, bank, healthcare assistant, clerical, administration, and assistant keywords.",
+        ],
+      };
+
+      const storedState = JSON.parse(localStorage.getItem("signaljobs-state") || "null");
+      const state = storedState?.version === seed.version ? storedState : seed;
+      const theme = localStorage.getItem("signaljobs-theme") || "light";
+      document.documentElement.dataset.theme = theme;
+
+      const trackerList = document.querySelector("#trackerList");
+      const jobList = document.querySelector("#jobList");
+      const activityList = document.querySelector("#activityList");
+      const modal = document.querySelector("#modalBackdrop");
+      const toast = document.querySelector("#toast");
+
+      const save = () => localStorage.setItem("signaljobs-state", JSON.stringify(state));
+
+      const showToast = (message) => {
+        toast.textContent = message;
+        toast.classList.add("show");
+        window.setTimeout(() => toast.classList.remove("show"), 2200);
+      };
+
+      const domainTitle = (url) => {
+        try {
+          return new URL(url).hostname.replace("www.", "").split(".")[0].replace(/-/g, " ");
+        } catch {
+          return "Custom source";
+        }
+      };
+
+      const renderMetrics = () => {
+        document.querySelector("#activeCount").textContent = state.trackers.filter((tracker) => tracker.active).length;
+        document.querySelector("#matchCount").textContent = state.jobs.length;
+        document.querySelector("#unreadCount").textContent = state.jobs.filter((job) => job.unread).length;
+        document.querySelector("#dupeCount").textContent = state.duplicateBlocks;
+      };
+
+      const renderTrackers = () => {
+        const query = document.querySelector("#searchInput").value.toLowerCase();
+        const frequency = document.querySelector("#frequencyFilter").value;
+        const status = document.querySelector("#statusFilter").value;
+        const filtered = state.trackers.filter((tracker) => {
+          const haystack = [tracker.title, tracker.site, tracker.location, tracker.keywords.join(" ")].join(" ").toLowerCase();
+          const matchesQuery = !query || haystack.includes(query);
+          const matchesFrequency = frequency === "all" || tracker.frequency === frequency;
+          const matchesStatus = status === "all" || (status === "active" ? tracker.active : !tracker.active);
+          return matchesQuery && matchesFrequency && matchesStatus;
+        });
+
+        trackerList.innerHTML = filtered.length
+          ? filtered
+              .map(
+                (tracker) => `
+                <article class="tracker-card">
+                  <div class="card-row">
+                    <div>
+                      <h3>${tracker.title}</h3>
+                      <div class="muted">${tracker.site}</div>
+                    </div>
+                    <span class="status ${tracker.active ? "" : "paused"}"><span class="dot"></span>${tracker.active ? "Active" : "Paused"}</span>
+                  </div>
+                  <div class="tags">
+                    ${tracker.keywords.map((keyword) => `<span class="tag">${keyword.trim()}</span>`).join("")}
+                    <span class="tag">${tracker.location}</span>
+                    <span class="tag">${tracker.frequency}</span>
+                    <span class="tag">${tracker.channels}</span>
+                  </div>
+                  <div class="card-actions">
+                    <button class="ghost-button" data-toggle="${tracker.id}" type="button">${tracker.active ? "Pause" : "Resume"}</button>
+                    <button class="ghost-button" data-scan="${tracker.id}" type="button">Scan</button>
+                    <button class="ghost-button" data-delete="${tracker.id}" type="button">Delete</button>
+                    <span class="muted" style="margin-left:auto; font-size:13px">Last checked ${tracker.lastChecked}</span>
+                  </div>
+                </article>
+              `,
+              )
+              .join("")
+          : `<div class="empty">No trackers match this filter.</div>`;
+      };
+
+      const renderJobs = () => {
+        const query = document.querySelector("#searchInput").value.toLowerCase();
+        const filtered = state.jobs.filter((job) => [job.title, job.company, job.location, job.summary].join(" ").toLowerCase().includes(query));
+        jobList.innerHTML = filtered.length
+          ? filtered
+              .sort((a, b) => b.match - a.match)
+              .map(
+                (job) => `
+                <article class="job-card">
+                  <div class="card-row">
+                    <div>
+                      <h3>${job.title}</h3>
+                      <div class="muted">${job.company} · ${job.location} · ${job.salary}</div>
+                    </div>
+                    <div class="match">${job.match}%</div>
+                  </div>
+                  <p class="muted" style="line-height:1.55; margin:12px 0">${job.summary}</p>
+                  <div class="card-actions">
+                    <a class="primary" href="${job.link}" target="_blank" rel="noreferrer">Apply</a>
+                    <span class="tag">${job.tracker}</span>
+                    ${job.unread ? '<span class="tag">Unread</span>' : ""}
+                  </div>
+                </article>
+              `,
+              )
+              .join("")
+          : `<div class="empty">No matching jobs yet. Run a scan or add another tracker.</div>`;
+      };
+
+      const renderActivity = () => {
+        activityList.innerHTML = state.activity
+          .map((item) => `<div class="activity-item"><strong>${item}</strong><div class="muted">Just now</div></div>`)
+          .join("");
+      };
+
+      const render = () => {
+        renderMetrics();
+        renderTrackers();
+        renderJobs();
+        renderActivity();
+        save();
+      };
+
+      document.querySelector("#openModal").addEventListener("click", () => modal.classList.add("open"));
+      document.querySelector("#closeModal").addEventListener("click", () => modal.classList.remove("open"));
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) modal.classList.remove("open");
+      });
+
+      document.querySelector("#trackerForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        const website = data.get("website").trim();
+        const keywords = data
+          .get("keywords")
+          .split(",")
+          .map((keyword) => keyword.trim())
+          .filter(Boolean);
+        const title = domainTitle(website).replace(/\b\w/g, (letter) => letter.toUpperCase());
+        state.trackers.unshift({
+          id: crypto.randomUUID(),
+          site: website,
+          title,
+          keywords,
+          location: data.get("location").trim(),
+          salary: data.get("salary"),
+          jobType: data.get("jobType"),
+          frequency: data.get("frequency"),
+          channels: data.get("channels"),
+          active: true,
+          lastChecked: "Not scanned yet",
+        });
+        state.activity.unshift(`${title} tracker created.`);
+        modal.classList.remove("open");
+        event.currentTarget.reset();
+        render();
+        showToast("Tracker saved. It will run on the next schedule.");
+      });
+
+      document.addEventListener("click", (event) => {
+        const toggleId = event.target.dataset.toggle;
+        const scanId = event.target.dataset.scan;
+        const deleteId = event.target.dataset.delete;
+        if (toggleId) {
+          const tracker = state.trackers.find((item) => item.id === toggleId);
+          tracker.active = !tracker.active;
+          state.activity.unshift(`${tracker.title} ${tracker.active ? "resumed" : "paused"}.`);
+          render();
+        }
+        if (scanId) {
+          const tracker = state.trackers.find((item) => item.id === scanId);
+          tracker.lastChecked = "just now";
+          state.duplicateBlocks += 1;
+          state.activity.unshift(`${tracker.title} manual scan completed.`);
+          render();
+          showToast("Manual scan finished. One duplicate was blocked.");
+        }
+        if (deleteId) {
+          const tracker = state.trackers.find((item) => item.id === deleteId);
+          state.trackers = state.trackers.filter((item) => item.id !== deleteId);
+          state.activity.unshift(`${tracker.title} tracker deleted.`);
+          render();
+        }
+      });
+
+      document.querySelector("#scanNow").addEventListener("click", () => {
+        const active = state.trackers.filter((tracker) => tracker.active);
+        active.forEach((tracker) => (tracker.lastChecked = "just now"));
+        state.duplicateBlocks += Math.max(1, active.length);
+        state.activity.unshift(`Full scan completed across ${active.length} active trackers.`);
+        render();
+        showToast("Scan complete. Dashboard updated.");
+      });
+
+      document.querySelector("#markRead").addEventListener("click", () => {
+        state.jobs.forEach((job) => (job.unread = false));
+        state.activity.unshift("All job notifications marked as read.");
+        render();
+      });
+
+      document.querySelector("#clearPaused").addEventListener("click", () => {
+        const before = state.trackers.length;
+        state.trackers = state.trackers.filter((tracker) => tracker.active);
+        state.activity.unshift(`${before - state.trackers.length} paused trackers cleared.`);
+        render();
+      });
+
+      document.querySelector("#themeToggle").addEventListener("click", () => {
+        const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem("signaljobs-theme", next);
+      });
+
+      ["#searchInput", "#frequencyFilter", "#statusFilter"].forEach((selector) => {
+        document.querySelector(selector).addEventListener("input", render);
+      });
+
+      render();
+    </script>
+  </body>
+</html>
